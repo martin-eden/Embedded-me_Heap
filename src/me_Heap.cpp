@@ -18,7 +18,9 @@
 #include <me_BaseTypes.h>
 #include <me_MemorySegment.h>
 #include <me_ManagedMemory.h>
-#include <me_Console.h> // debug output
+#include <me_Console.h> // [Debug] debug output
+#include <stdio.h> // [Debug] not self-referencing debug output
+#include <Arduino.h> // [Debug] PSTR for debug output
 
 using namespace me_Heap;
 
@@ -82,9 +84,12 @@ TBool THeap::Init(
 
     TUint_2 BitmapSize = (HeapMem.GetSize() + BitsInByte - 1) / BitsInByte;
 
-    // No memory for bitmap? Return.
+    // No memory for bitmap? Release data and return.
     if (!Bitmap.ResizeTo(BitmapSize))
+    {
+      HeapMem.Release();
       return false;
+    }
   }
 
   IsReadyFlag = true;
@@ -102,17 +107,26 @@ TBool THeap::IsReady()
 
 /*
   Reserve block of given size
+
+  Allocated block is always filled with zeroes.
 */
 TBool THeap::Reserve(
   TMemorySegment * MemSeg,
   TUint_2 Size
 )
 {
+  // Zero size? Job done!
+  if (Size == 0)
+    return true;
+
   TUint_2 InsertIndex;
 
   // No idea where to place it? Return
   if (!GetInsertIndex(Size, &InsertIndex))
+  {
+    printf_P(PSTR("[Heap] Failed to reserve.\n"));
     return false;
+  }
 
   MemSeg->Start.Addr = InsertIndex;
   MemSeg->Size = Size;
@@ -123,30 +137,55 @@ TBool THeap::Reserve(
   // Add base offset to returned memory segment
   MemSeg->Start.Addr = MemSeg->Start.Addr + HeapMem.GetData().Start.Addr;
 
+  // Zero data (design requirement)
+  me_ManagedMemory::Freetown::ZeroMem(*MemSeg);
+
+  printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
+
   return true;
 }
 
 /*
   Release block described by segment
+
+  Released block may be filled with zeroes.
 */
 TBool THeap::Release(
   TMemorySegment * MemSeg
 )
 {
+  // Zero size? Job done!
+  if (MemSeg->Size == 0)
+  {
+    MemSeg->Start.Addr = 0;
+    return false;
+  }
+
+  printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
+
   /*
     We're marking span as free in bitmap.
   */
 
   // Segment is not in managed memory? WTF?
   if (!IsOurs(*MemSeg))
+  {
+    printf_P(PSTR("[Heap] Not ours.\n"));
     return false;
+  }
+
+  // Zero data for security (optional)
+  me_ManagedMemory::Freetown::ZeroMem(*MemSeg);
 
   // Subtract base offset
   MemSeg->Start.Addr = MemSeg->Start.Addr - HeapMem.GetData().Start.Addr;
 
   // Sanity check: All bits for span in bitmap must be set (span is used)
   if (!RangeIsSolid(*MemSeg, true))
+  {
+    printf_P(PSTR("[Heap] Not solid.\n"));
     return false;
+  }
 
   // Clear all bits in bitmap for span
   SetRange(*MemSeg, false);
