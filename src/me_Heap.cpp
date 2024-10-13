@@ -207,37 +207,24 @@ TBool THeap::GetInsertIndex(
   TUint_2 * InsertIndex
 )
 {
-  /*
-    Greedy strategies like "smallest gap nearby" are lame.
-    Memory fragmentation punishes them real hard.
-
-    We're using Golden ratio because it sounds cool.
-
-    When we asked to get range for 100 bytes in empty 1000-bytes
-    segment, we're returning index range [62, 161].
-  */
-  TUint_2 IdealSize = (TFloat) 1.62 * SpanSize;
-
-  if (!FindSpan(InsertIndex, SpanSize, IdealSize))
+  if (!FindSpan(InsertIndex, SpanSize))
     return false;
 
   return true;
 }
 
 /*
-  Find free span between minimum and ideal size
+  Just searches for minimum span that fits
 */
 TBool THeap::FindSpan(
   TUint_2 * Index,
-  TUint_2 MinSize,
-  TUint_2 IdealSize
+  TUint_2 MinSize
 )
 {
   TUint_2 Cursor = 0;
   TUint_2 Limit = HeapMem.GetSize();
   TUint_2 BestIndex = 0xFFFF;
   TUint_2 BestDelta = 0xFFFF;
-  TUint_2 BestSpan = 0xFFFF;
 
   TUint_2 NextBusy;
   TUint_2 SpanLength;
@@ -251,18 +238,12 @@ TBool THeap::FindSpan(
     {
       if (SpanLength >= MinSize)
       {
-        TUint_2 Delta;
-
-        if (SpanLength <= IdealSize)
-          Delta = IdealSize - SpanLength;
-        else
-          Delta = SpanLength - IdealSize;
+        TUint_2 Delta = SpanLength - MinSize;
 
         if (Delta < BestDelta)
         {
           BestIndex = Cursor;
           BestDelta = Delta;
-          BestSpan = SpanLength;
         }
       }
     }
@@ -274,12 +255,6 @@ TBool THeap::FindSpan(
 
   if (BestIndex < Limit)
   {
-    // Correct best index
-    if (BestSpan < IdealSize)
-      BestIndex = BestIndex + (BestSpan - MinSize);
-    else
-      BestIndex = BestIndex + (IdealSize - MinSize);
-
     *Index = BestIndex;
 
     return true;
