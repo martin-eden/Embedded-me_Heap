@@ -95,18 +95,13 @@ namespace me_Heap
     private:
       me_ManagedMemory::TManagedMemory HeapMem;
       me_ManagedMemory::TManagedMemory Bitmap;
-      TBool IsReadyFlag;
+      TBool IsReadyFlag = false;
+      TUint_2 LastSegSize = 0;
 
       // Get index of empty span in bitmap where we will allocate
       TBool GetInsertIndex(
-        TUint_2 Size,
-        TUint_2 * InsertIndex
-      );
-
-      // Find free span between minimum and ideal size
-      TBool FindSpan(
-        TUint_2 * Index,
-        TUint_2 MinSize
+        TUint_2 * InsertIndex,
+        TUint_2 Size
       );
 
       // Find nearest busy byte

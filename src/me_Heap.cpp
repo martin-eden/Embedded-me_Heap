@@ -6,8 +6,8 @@
 */
 
 /*
-  Implementation uses bitmap. So to overhead is (N / 8) for managing
-  (N) bytes of memory.
+  Implementation uses bitmap. So overhead is (N / 8) for managing
+  (N) bytes of memory. Runtime is constant O(N).
 
   Speed is not our goal. Memory footprint is not our goal.
   Our goal is fragmentation-resilience.
@@ -18,9 +18,8 @@
 #include <me_BaseTypes.h>
 #include <me_MemorySegment.h>
 #include <me_ManagedMemory.h>
-#include <me_Console.h> // [Debug] debug output
-#include <stdio.h> // [Debug] not self-referencing debug output
-#include <Arduino.h> // [Debug] PSTR for debug output
+// #include <Arduino.h> // [Debug] for PSTR()
+// #include <stdio.h> // [Debug] for printf_P()
 
 using namespace me_Heap;
 
@@ -40,7 +39,7 @@ THeap::~THeap()
   /*
     If we're alive via global (then we shouldn't die but anyway)
     destructors for our [me_ManagedMemory] data will check
-    "<OurGlobalName>.GetIsReady()".
+    "<OurGlobalName>.IsReady()".
 
     If it returns "false" they will use stock free().
   */
@@ -122,14 +121,22 @@ TBool THeap::Reserve(
   TUint_2 InsertIndex;
 
   // No idea where to place it? Return
-  if (!GetInsertIndex(Size, &InsertIndex))
+  if (!GetInsertIndex(&InsertIndex, Size))
   {
-    printf_P(PSTR("[Heap] Failed to reserve.\n"));
+    // printf_P(PSTR("[Heap] Failed to reserve.\n"));
     return false;
   }
 
   MemSeg->Start.Addr = InsertIndex;
   MemSeg->Size = Size;
+
+  /* [Sanity] All bits for span in bitmap must be clear (span is free)
+  if (!RangeIsSolid(*MemSeg, false))
+  {
+    // printf_P(PSTR("[Heap] Span is not free.\n"));
+    return false;
+  }
+  //*/
 
   // Set all bits in bitmap for span
   SetRange(*MemSeg, true);
@@ -140,7 +147,7 @@ TBool THeap::Reserve(
   // Zero data (design requirement)
   me_ManagedMemory::Freetown::ZeroMem(*MemSeg);
 
-  printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
+  // printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
 
   return true;
 }
@@ -161,7 +168,7 @@ TBool THeap::Release(
     return false;
   }
 
-  printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
+  // printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
 
   /*
     We're marking span as free in bitmap.
@@ -170,7 +177,7 @@ TBool THeap::Release(
   // Segment is not in managed memory? WTF?
   if (!IsOurs(*MemSeg))
   {
-    printf_P(PSTR("[Heap] Not ours.\n"));
+    // printf_P(PSTR("[Heap] Not ours.\n"));
     return false;
   }
 
@@ -180,12 +187,13 @@ TBool THeap::Release(
   // Subtract base offset
   MemSeg->Start.Addr = MemSeg->Start.Addr - HeapMem.GetData().Start.Addr;
 
-  // Sanity check: All bits for span in bitmap must be set (span is used)
+  /* [Sanity] All bits for span in bitmap must be set (span is used)
   if (!RangeIsSolid(*MemSeg, true))
   {
-    printf_P(PSTR("[Heap] Not solid.\n"));
+    // printf_P(PSTR("[Heap] Span is not solid.\n"));
     return false;
   }
+  //*/
 
   // Clear all bits in bitmap for span
   SetRange(*MemSeg, false);
@@ -203,48 +211,37 @@ TBool THeap::Release(
   We have freedom where to place span in bitmap.
 */
 TBool THeap::GetInsertIndex(
-  TUint_2 SpanSize,
-  TUint_2 * InsertIndex
-)
-{
-  if (!FindSpan(InsertIndex, SpanSize))
-    return false;
-
-  return true;
-}
-
-/*
-  Just searches for minimum span that fits
-*/
-TBool THeap::FindSpan(
   TUint_2 * Index,
-  TUint_2 MinSize
+  TUint_2 SegSize
 )
 {
   TUint_2 Cursor = 0;
   TUint_2 Limit = HeapMem.GetSize();
   TUint_2 BestIndex = 0xFFFF;
   TUint_2 BestDelta = 0xFFFF;
+  TUint_2 BestSpanLen = 0xFFFF;
 
   TUint_2 NextBusy;
-  TUint_2 SpanLength;
+  TUint_2 SpanLen;
+  TUint_2 Delta; // Remaining gap
   do
   {
     NextBusy = GetNextBusyIndex(Cursor);
 
-    SpanLength = NextBusy - Cursor;
+    SpanLen = NextBusy - Cursor;
 
-    if (SpanLength > 0)
+    if (SpanLen >= SegSize)
     {
-      if (SpanLength >= MinSize)
-      {
-        TUint_2 Delta = SpanLength - MinSize;
+      Delta = SpanLen - SegSize;
+      if (Delta > SpanLen)
+        Delta = Delta - SpanLen;
+      // ? or Delta = Delta % SegSize ?
 
-        if (Delta < BestDelta)
-        {
-          BestIndex = Cursor;
-          BestDelta = Delta;
-        }
+      if (Delta < BestDelta)
+      {
+        BestIndex = Cursor;
+        BestDelta = Delta;
+        BestSpanLen = SpanLen;
       }
     }
 
@@ -255,6 +252,12 @@ TBool THeap::FindSpan(
 
   if (BestIndex < Limit)
   {
+    TBool AttachToRight = (SegSize < LastSegSize);
+    if (AttachToRight)
+      BestIndex = BestIndex + (BestSpanLen - SegSize);
+
+    LastSegSize = SegSize;
+
     *Index = BestIndex;
 
     return true;
@@ -264,7 +267,7 @@ TBool THeap::FindSpan(
 }
 
 /*
-  Find nearest busy byte
+  Find nearest busy byte to the right
 */
 TUint_2 THeap::GetNextBusyIndex(
   TUint_2 StartIdx
@@ -390,4 +393,5 @@ me_Heap::THeap Heap;
 /*
   2024-10-11
   2024-10-12
+  2024-10-13 Two insertion points, optimizing gap for next iteration
 */
