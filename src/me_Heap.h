@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-11
+  Last mod.: 2024-10-13
 */
 
 /*
@@ -106,8 +106,7 @@ namespace me_Heap
       // Find free span between minimum and ideal size
       TBool FindSpan(
         TUint_2 * Index,
-        TUint_2 MinSize,
-        TUint_2 IdealSize
+        TUint_2 MinSize
       );
 
       // Find nearest busy byte
