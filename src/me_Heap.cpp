@@ -2,15 +2,12 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-12
+  Last mod.: 2024-10-17
 */
 
 /*
   Implementation uses bitmap. So overhead is (N / 8) for managing
   (N) bytes of memory. Runtime is constant O(N).
-
-  Speed is not our goal. Memory footprint is not our goal.
-  Our goal is fragmentation-resilience.
 */
 
 #include "me_Heap.h"
@@ -233,9 +230,6 @@ TBool THeap::GetInsertIndex(
     if (SpanLen >= SegSize)
     {
       Delta = SpanLen - SegSize;
-      if (Delta > SpanLen)
-        Delta = Delta - SpanLen;
-      // ? or Delta = Delta % SegSize ?
 
       if (Delta < BestDelta)
       {
@@ -252,11 +246,12 @@ TBool THeap::GetInsertIndex(
 
   if (BestIndex < Limit)
   {
-    TBool AttachToRight = (SegSize < LastSegSize);
+    TBool AttachToRight = (SegSize < MaxSegSize);
     if (AttachToRight)
       BestIndex = BestIndex + (BestSpanLen - SegSize);
 
-    LastSegSize = SegSize;
+    if (SegSize > MaxSegSize)
+      MaxSegSize = SegSize;
 
     *Index = BestIndex;
 

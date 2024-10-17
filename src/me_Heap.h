@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-13
+  Last mod.: 2024-10-17
 */
 
 /*
@@ -74,6 +74,12 @@ namespace me_Heap
 {
   class THeap
   {
+    private:
+      me_ManagedMemory::TManagedMemory HeapMem;
+      me_ManagedMemory::TManagedMemory Bitmap;
+      TBool IsReadyFlag = false;
+      TUint_2 MaxSegSize = 0;
+
     public:
       ~THeap();
 
@@ -93,10 +99,6 @@ namespace me_Heap
       TBool IsReady();
 
     private:
-      me_ManagedMemory::TManagedMemory HeapMem;
-      me_ManagedMemory::TManagedMemory Bitmap;
-      TBool IsReadyFlag = false;
-      TUint_2 LastSegSize = 0;
 
       // Get index of empty span in bitmap where we will allocate
       TBool GetInsertIndex(
