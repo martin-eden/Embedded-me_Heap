@@ -15,8 +15,8 @@
 #include <me_BaseTypes.h>
 #include <me_MemorySegment.h>
 #include <me_ManagedMemory.h>
-// #include <Arduino.h> // [Debug] for PSTR()
-// #include <stdio.h> // [Debug] for printf_P()
+#include <Arduino.h> // [Debug] for PSTR()
+#include <stdio.h> // [Debug] for printf_P()
 
 using namespace me_Heap;
 
@@ -167,6 +167,9 @@ TBool THeap::Release(
 
   // printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
 
+  LastSegSize = MemSeg->Size;
+
+
   /*
     We're marking span as free in bitmap.
   */
@@ -246,12 +249,11 @@ TBool THeap::GetInsertIndex(
 
   if (BestIndex < Limit)
   {
-    TBool AttachToRight = (SegSize < MaxSegSize);
+    TBool AttachToRight = (SegSize < LastSegSize);
     if (AttachToRight)
       BestIndex = BestIndex + (BestSpanLen - SegSize);
 
-    if (SegSize > MaxSegSize)
-      MaxSegSize = SegSize;
+    LastSegSize = SegSize;
 
     *Index = BestIndex;
 

@@ -6,62 +6,7 @@
 */
 
 /*
-  Why I'm writing this module
-
-    To explore memory fragmentation patterns depending on allocation
-    strategy.
-
-  AVR Arduino Uno environment:
-
-    We have direct access to all (256 + 2048) bytes of memory.
-    That memory is all we have.
-
-    First 256 bytes are special:
-
-      First 32 bytes are processor registers. Next (256 - 32) bytes are
-      control registers.
-
-      Writing values to them makes effects. Like changing next
-      instruction pointer, setting pin to LOW or HIGH, or transmitting
-      character via UART.
-
-    Last bytes are special too:
-
-      At the end of memory lives stack. Stack stores upvalues
-      from upper functions. And stack grows down.
-
-    So "free memory" may start from address 256 and lasts until stack
-    end. But stack end changes dynamically. And we have no idea how
-    deep it can go down. (No one has.)
-
-    But where global data are allocated? I bet in lower addresses. So
-    "free memory" starts after end of last global data and lasts
-    until current stack border at high addresses.
-
-  What if we just declare global "TUint_1 Heap[1024]" ?
-
-    I think it's not too bad. Compiler will reserve for us 1KiB
-    memory somewhere. We can use it as we please.
-
-    Except "1024". Why not 1023, or 200 or 1500?
-
-      Here I see two approaches.
-
-      One is to make it compile-time constant. Allocate 1311 bytes
-      for "heap". Period.
-
-      Another one is ask alloc() to get us 1311 bytes. Problem is that
-      it's not always can get us 1311 bytes. Memory may be fragmented.
-
-  We don't care
-
-    We just need memory span that noone will touch.
-
-    So we may use static array or we may ask alloc() to get us it.
-
-    (Spoiler: we're asking alloc().)
-
-  2024-10-12
+  Experimental module.
 */
 
 #pragma once
@@ -78,7 +23,7 @@ namespace me_Heap
       me_ManagedMemory::TManagedMemory HeapMem;
       me_ManagedMemory::TManagedMemory Bitmap;
       TBool IsReadyFlag = false;
-      TUint_2 MaxSegSize = 0;
+      TUint_2 LastSegSize = 0;
 
     public:
       ~THeap();
