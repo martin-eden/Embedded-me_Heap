@@ -142,7 +142,7 @@ TBool THeap::Reserve(
   MemSeg->Start.Addr = MemSeg->Start.Addr + HeapMem.GetData().Start.Addr;
 
   // Zero data (design requirement)
-  me_ManagedMemory::Freetown::ZeroMem(*MemSeg);
+  me_MemorySegment::Freetown::ZeroMem(*MemSeg);
 
   // printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
 
@@ -169,12 +169,11 @@ TBool THeap::Release(
 
   LastSegSize = MemSeg->Size;
 
-
   /*
     We're marking span as free in bitmap.
   */
 
-  // Segment is not in managed memory? WTF?
+  // Segment is not in our memory?
   if (!IsOurs(*MemSeg))
   {
     // printf_P(PSTR("[Heap] Not ours.\n"));
@@ -182,7 +181,7 @@ TBool THeap::Release(
   }
 
   // Zero data for security (optional)
-  me_ManagedMemory::Freetown::ZeroMem(*MemSeg);
+  me_MemorySegment::Freetown::ZeroMem(*MemSeg);
 
   // Subtract base offset
   MemSeg->Start.Addr = MemSeg->Start.Addr - HeapMem.GetData().Start.Addr;
