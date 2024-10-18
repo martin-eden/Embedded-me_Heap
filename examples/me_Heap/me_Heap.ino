@@ -15,8 +15,8 @@
 
 void setup()
 {
+  Serial.begin(me_UartSpeeds::Arduino_Normal_Bps);
   InstallStandardStreams();
-  Console.Init(me_UartSpeeds::Arduino_Normal_Bps);
   Console.Print("[me_Heap] Start.");
   Console.Indent();
   RunTest();
