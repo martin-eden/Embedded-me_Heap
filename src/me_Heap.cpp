@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-17
+  Last mod.: 2024-10-23
 */
 
 /*
@@ -124,7 +124,8 @@ TBool THeap::Reserve(
     return false;
   }
 
-  MemSeg->Start.Addr = InsertIndex;
+  // So far <MemSeg.Addr> is just zero-based index
+  MemSeg->Addr = InsertIndex;
   MemSeg->Size = Size;
 
   /* [Sanity] All bits for span in bitmap must be clear (span is free)
@@ -138,13 +139,13 @@ TBool THeap::Reserve(
   // Set all bits in bitmap for span
   SetRange(*MemSeg, true);
 
-  // Add base offset to returned memory segment
-  MemSeg->Start.Addr = MemSeg->Start.Addr + HeapMem.GetData().Start.Addr;
+  // Now <MemSeg.Addr> is real address
+  MemSeg->Addr = MemSeg->Addr + HeapMem.GetData().Addr;
 
   // Zero data (design requirement)
   me_MemorySegment::Freetown::ZeroMem(*MemSeg);
 
-  // printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
+  // printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
 
   return true;
 }
@@ -161,11 +162,11 @@ TBool THeap::Release(
   // Zero size? Job done!
   if (MemSeg->Size == 0)
   {
-    MemSeg->Start.Addr = 0;
+    MemSeg->Addr = 0;
     return false;
   }
 
-  // printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Start.Addr, MemSeg->Size);
+  // printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
 
   LastSegSize = MemSeg->Size;
 
@@ -183,8 +184,8 @@ TBool THeap::Release(
   // Zero data for security (optional)
   me_MemorySegment::Freetown::ZeroMem(*MemSeg);
 
-  // Subtract base offset
-  MemSeg->Start.Addr = MemSeg->Start.Addr - HeapMem.GetData().Start.Addr;
+  // Now <MemSeg.Addr> is zero-based index
+  MemSeg->Addr = MemSeg->Addr - HeapMem.GetData().Addr;
 
   /* [Sanity] All bits for span in bitmap must be set (span is used)
   if (!RangeIsSolid(*MemSeg, true))
@@ -198,7 +199,7 @@ TBool THeap::Release(
   SetRange(*MemSeg, false);
 
   // Yep, you're free to go
-  MemSeg->Start.Addr = 0;
+  MemSeg->Addr = 0;
   MemSeg->Size = 0;
 
   return true;
@@ -297,7 +298,7 @@ void THeap::SetRange(
   TBool BitsValue
 )
 {
-  TUint_2 StartBitIdx = MemSeg.Start.Addr;
+  TUint_2 StartBitIdx = MemSeg.Addr;
   TUint_2 EndBitIdx = StartBitIdx + MemSeg.Size - 1;
 
   for (TUint_2 Offset = StartBitIdx; Offset <= EndBitIdx; ++Offset)
@@ -327,7 +328,7 @@ TBool THeap::RangeIsSolid(
   TBool BitsValue
 )
 {
-  TUint_2 StartBitIdx = MemSeg.Start.Addr;
+  TUint_2 StartBitIdx = MemSeg.Addr;
   TUint_2 EndBitIdx = StartBitIdx + MemSeg.Size - 1;
 
   for (TUint_2 Offset = StartBitIdx; Offset < EndBitIdx; ++Offset)
