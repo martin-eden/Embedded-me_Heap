@@ -214,6 +214,16 @@ TBool THeap::GetInsertIndex(
   TUint_2 SegSize
 )
 {
+  /*
+    Below is best-fit algorithm.
+
+    But when we found best segment, we'll attach our span to
+    it's start or to it's end. We'll attach span to the end if
+    current segment size is less than segment size from previous
+    call of us. (Current segment size is less than size of
+    previously allocated segment.)
+  */
+
   TUint_2 Cursor = 0;
   TUint_2 Limit = HeapMem.GetSize();
   TUint_2 BestIndex = 0xFFFF;
