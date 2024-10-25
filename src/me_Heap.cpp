@@ -63,22 +63,31 @@ TBool THeap::Init(
     caller's convenience. What is ours is bitmap for that segment.
   */
 
+  /*
+    We want to keep things simple. Bit index is eight times more
+    than byte index. So for 64Ki max bit index is 512Ki.
+
+    That's outside of UInt_2 range that I'm trying to stay
+    (unless absolutely necessary or unless I really want to.).
+
+    In this case my system having 2Ki memory. Maximum this code
+    can allocate is 8Ki. I'm not going to make deviations and
+    write code that can allocate 64Ki. Or 4Gi. Or 4Gi*4Gi.
+  */
+  const TUint_2 MaxSize = 0xFFFF / BitsInByte;
+
+  if (Size > MaxSize)
+    return false;
+
   IsReadyFlag = false;
 
+  // Get memory for data
   // No memory for data? Return
   if (!HeapMem.ResizeTo(Size))
     return false;
 
   // Get memory for bitmap
   {
-    TUint_4 NumBits = (TUint_4) HeapMem.GetSize() * BitsInByte;
-
-    const TUint_4 MaxUint_2 = 0x0000FFFF;
-
-    // Number of bits is more than 64 Ki? Means .Size >= 8 KiB. Return.
-    if (NumBits > MaxUint_2)
-      return false;
-
     TUint_2 BitmapSize = (HeapMem.GetSize() + BitsInByte - 1) / BitsInByte;
 
     // No memory for bitmap? Release data and return.
