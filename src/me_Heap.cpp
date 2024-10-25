@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-23
+  Last mod.: 2024-10-25
 */
 
 /*
@@ -17,6 +17,7 @@
 #include <me_ManagedMemory.h>
 #include <Arduino.h> // [Debug] for PSTR()
 #include <stdio.h> // [Debug] for printf_P()
+#include <me_Bits.h>
 
 using namespace me_Heap;
 
@@ -120,7 +121,7 @@ TBool THeap::Reserve(
   // No idea where to place it? Return
   if (!GetInsertIndex(&InsertIndex, Size))
   {
-    // printf_P(PSTR("[Heap] Failed to reserve.\n"));
+    printf_P(PSTR("[Heap] Failed to reserve.\n"));
     return false;
   }
 
@@ -128,10 +129,10 @@ TBool THeap::Reserve(
   MemSeg->Addr = InsertIndex;
   MemSeg->Size = Size;
 
-  /* [Sanity] All bits for span in bitmap must be clear (span is free)
+  //* [Sanity] All bits for span in bitmap must be clear (span is free)
   if (!RangeIsSolid(*MemSeg, false))
   {
-    // printf_P(PSTR("[Heap] Span is not free.\n"));
+    printf_P(PSTR("[Heap] Span is not free.\n"));
     return false;
   }
   //*/
@@ -145,7 +146,7 @@ TBool THeap::Reserve(
   // Zero data (design requirement)
   me_MemorySegment::Freetown::ZeroMem(*MemSeg);
 
-  // printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
+  printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
 
   return true;
 }
@@ -166,7 +167,7 @@ TBool THeap::Release(
     return false;
   }
 
-  // printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
+  printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
 
   LastSegSize = MemSeg->Size;
 
@@ -177,7 +178,7 @@ TBool THeap::Release(
   // Segment is not in our memory?
   if (!IsOurs(*MemSeg))
   {
-    // printf_P(PSTR("[Heap] Not ours.\n"));
+    printf_P(PSTR("[Heap] Not ours.\n"));
     return false;
   }
 
@@ -187,10 +188,10 @@ TBool THeap::Release(
   // Now <MemSeg.Addr> is zero-based index
   MemSeg->Addr = MemSeg->Addr - HeapMem.GetData().Addr;
 
-  /* [Sanity] All bits for span in bitmap must be set (span is used)
+  //* [Sanity] All bits for span in bitmap must be set (span is used)
   if (!RangeIsSolid(*MemSeg, true))
   {
-    // printf_P(PSTR("[Heap] Span is not solid.\n"));
+    printf_P(PSTR("[Heap] Span is not solid.\n"));
     return false;
   }
   //*/
@@ -348,13 +349,13 @@ TBool THeap::GetBit(
 )
 {
   TUint_2 ByteIndex = BitIndex / BitsInByte;
+
   TUint_1 ByteValue = Bitmap.GetData().Bytes[ByteIndex];
 
   TUint_1 BitOffset = BitIndex % BitsInByte;
 
-  TUint_1 ByteMask = (1 << BitOffset);
-
-  TBool BitValue = ((ByteValue & ByteMask) != 0);
+  TBool BitValue;
+  me_Bits::GetBit(&BitValue, ByteValue, BitOffset);
 
   return BitValue;
 }
@@ -370,22 +371,12 @@ void THeap::SetBit(
 )
 {
   TUint_2 ByteIndex = BitIndex / BitsInByte;
+
   TUint_1 ByteValue = Bitmap.GetData().Bytes[ByteIndex];
 
   TUint_1 BitOffset = BitIndex % BitsInByte;
 
-  TUint_1 ByteMask;
-
-  if (BitValue == false)
-  {
-    ByteMask = ~(1 << BitOffset);
-    ByteValue = ByteValue & ByteMask;
-  }
-  else if (BitValue == true)
-  {
-    ByteMask = (1 << BitOffset);
-    ByteValue = ByteValue | ByteMask;
-  }
+  me_Bits::SetBit(&ByteValue, ByteValue, BitOffset, BitValue);
 
   Bitmap.GetData().Bytes[ByteIndex] = ByteValue;
 }
@@ -401,4 +392,5 @@ me_Heap::THeap Heap;
   2024-10-11
   2024-10-12
   2024-10-13 Two insertion points, optimizing gap for next iteration
+  2024-10-25 Using [me_Bits]
 */
