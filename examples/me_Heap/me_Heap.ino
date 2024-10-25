@@ -2,16 +2,16 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-12
+  Last mod.: 2024-10-25
 */
+
+#include <me_Heap.h>
 
 #include <me_BaseTypes.h>
 #include <me_UartSpeeds.h>
 #include <me_InstallStandardStreams.h>
 #include <me_Console.h>
-#include <me_ManagedMemory.h>
-#include <me_String.h>
-#include <me_Heap.h>
+#include <me_MemorySegment.h>
 
 void setup()
 {
@@ -86,4 +86,5 @@ void RunTest()
 /*
   2024-10-11
   2024-10-12
+  2024-10-25
 */
