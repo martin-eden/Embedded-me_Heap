@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-25
+  Last mod.: 2024-10-26
 */
 
 /*
@@ -363,10 +363,7 @@ TBool THeap::GetBit(
 
   TUint_1 BitOffset = BitIndex % BitsInByte;
 
-  TBool BitValue;
-  me_Bits::GetBit(&BitValue, ByteValue, BitOffset);
-
-  return BitValue;
+  return me_Bits::GetBit(ByteValue, BitOffset);
 }
 
 /*
@@ -385,7 +382,7 @@ void THeap::SetBit(
 
   TUint_1 BitOffset = BitIndex % BitsInByte;
 
-  me_Bits::SetBit(&ByteValue, ByteValue, BitOffset, BitValue);
+  me_Bits::SetBit(&ByteValue, BitOffset, BitValue);
 
   Bitmap.GetData().Bytes[ByteIndex] = ByteValue;
 }
