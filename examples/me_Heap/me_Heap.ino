@@ -2,21 +2,22 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-25
+  Last mod.: 2024-12-19
 */
 
 #include <me_Heap.h>
 
 #include <me_BaseTypes.h>
-#include <me_UartSpeeds.h>
-#include <me_InstallStandardStreams.h>
+#include <me_Uart.h>
 #include <me_Console.h>
 #include <me_MemorySegment.h>
+#include <me_InstallStandardStreams.h> // Implementation uses printf()
 
 void setup()
 {
-  Serial.begin(me_UartSpeeds::Arduino_Normal_Bps);
+  me_Uart::Init(me_Uart::Speed_115k_Bps);
   InstallStandardStreams();
+
   Console.Print("[me_Heap] Start.");
   Console.Indent();
   RunTest();
@@ -40,7 +41,7 @@ void RunTest()
       me_Heap::THeap Heap;
   */
 
-  const TUint_2 HeapSize = 800;
+  const TUint_2 HeapSize = 400;
 
   if (!Heap.Init(HeapSize))
   {
