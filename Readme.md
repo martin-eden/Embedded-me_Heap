@@ -36,14 +36,9 @@ module is explore strategies and readable code.
   * bash
 
 
-## Install
+## Install/remove
 
-Run [Install.sh](Install.sh).
-
-
-## Remove
-
-Run [Remove.sh](Remove.sh).
+Easy way is to clone [GetLibs][GetLibs] repo and run it's code.
 
 
 # Compile
@@ -69,6 +64,8 @@ arduino-cli compile --fqbn arduino:avr:uno --quiet --warnings all . --build-prop
 [Example]: examples/me_Heap/me_Heap.ino
 [Interface]: src/me_Heap.h
 [Implementation]: src/me_Heap.cpp
+
+[GetLibs]: https://github.com/martin-eden/Embedded-Framework-GetLibs
 
 [Embedded]: https://github.com/martin-eden/Embedded_Crafts/tree/master/Parts
 [Repos]: https://github.com/martin-eden/contents
