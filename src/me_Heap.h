@@ -2,11 +2,11 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-
+  Last mod.: 2025-07-29
 */
 
 /*
-  Experimental module.
+  Experimental module
 */
 
 #pragma once
@@ -59,13 +59,23 @@ namespace me_Heap
       // Bitmap bits are same for this segment?
       TBool RangeIsSolid(
         me_MemorySegment::TMemorySegment MemSeg,
-        TBool BitsValue
+        TUint_1 BitsValue
       );
 
-      // Set bitmap bits for segment
+      // Set bitmap bits for segment to given value
       void SetRange(
         me_MemorySegment::TMemorySegment MemSeg,
-        TBool BitsValue
+        TUint_1 BitsValue
+      );
+
+      // Set bitmap range bits
+      void MarkRange(
+        me_MemorySegment::TMemorySegment MemSeg
+      );
+
+      // Clear bitmap range bits
+      void ClearRange(
+        me_MemorySegment::TMemorySegment MemSeg
       );
 
       // [Sanity] segment in our managed range?
@@ -74,14 +84,14 @@ namespace me_Heap
       );
 
       // Return bit value in segment's data
-      TBool GetBit(
+      TUint_1 GetBit(
         TUint_2 BitIndex
       );
 
       // Set bit to given value in segment's data
       void SetBit(
         TUint_2 BitIndex,
-        TBool BitValue
+        TUint_1 BitValue
       );
   };
 }
@@ -113,4 +123,5 @@ extern me_Heap::THeap Heap;
 /*
   2024-10-11
   2024-10-12
+  2025-07-29
 */

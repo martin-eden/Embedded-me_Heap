@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2024-10-26
+  Last mod.: 2025-07-29
 */
 
 /*
@@ -139,7 +139,7 @@ TBool THeap::Reserve(
   MemSeg->Size = Size;
 
   //* [Sanity] All bits for span in bitmap must be clear (span is free)
-  if (!RangeIsSolid(*MemSeg, false))
+  if (!RangeIsSolid(*MemSeg, 0))
   {
     printf_P(PSTR("[Heap] Span is not free.\n"));
     return false;
@@ -147,7 +147,7 @@ TBool THeap::Reserve(
   //*/
 
   // Set all bits in bitmap for span
-  SetRange(*MemSeg, true);
+  MarkRange(*MemSeg);
 
   // Now <MemSeg.Addr> is real address
   MemSeg->Addr = MemSeg->Addr + HeapMem.GetData().Addr;
@@ -198,7 +198,7 @@ TBool THeap::Release(
   MemSeg->Addr = MemSeg->Addr - HeapMem.GetData().Addr;
 
   //* [Sanity] All bits for span in bitmap must be set (span is used)
-  if (!RangeIsSolid(*MemSeg, true))
+  if (!RangeIsSolid(*MemSeg, 1))
   {
     printf_P(PSTR("[Heap] Span is not solid.\n"));
     return false;
@@ -206,7 +206,7 @@ TBool THeap::Release(
   //*/
 
   // Clear all bits in bitmap for span
-  SetRange(*MemSeg, false);
+  ClearRange(*MemSeg);
 
   // Yep, you're free to go
   MemSeg->Addr = 0;
@@ -305,7 +305,7 @@ TUint_2 THeap::GetNextBusyIndex(
 */
 void THeap::SetRange(
   TMemorySegment MemSeg,
-  TBool BitsValue
+  TUint_1 BitsValue
 )
 {
   TUint_2 StartBitIdx = MemSeg.Addr;
@@ -313,6 +313,26 @@ void THeap::SetRange(
 
   for (TUint_2 Offset = StartBitIdx; Offset <= EndBitIdx; ++Offset)
     SetBit(Offset, BitsValue);
+}
+
+/*
+  [Internal] Set bitmap range bits
+*/
+void THeap::MarkRange(
+  TMemorySegment MemSeg
+)
+{
+  SetRange(MemSeg, 1);
+}
+
+/*
+  [Internal] Clear bitmap range bits
+*/
+void THeap::ClearRange(
+  TMemorySegment MemSeg
+)
+{
+  SetRange(MemSeg, 0);
 }
 
 /*
@@ -335,7 +355,7 @@ TBool THeap::IsOurs(
 */
 TBool THeap::RangeIsSolid(
   TMemorySegment MemSeg,
-  TBool BitsValue
+  TUint_1 BitsValue
 )
 {
   TUint_2 StartBitIdx = MemSeg.Addr;
@@ -353,17 +373,25 @@ TBool THeap::RangeIsSolid(
 
   Typically it's called from cycle, so no range checks.
 */
-TBool THeap::GetBit(
+TUint_1 THeap::GetBit(
   TUint_2 BitIndex
 )
 {
+  using
+    me_Bits::GetBit;
+
   TUint_2 ByteIndex = BitIndex / BitsInByte;
 
   TUint_1 ByteValue = Bitmap.GetData().Bytes[ByteIndex];
 
   TUint_1 BitOffset = BitIndex % BitsInByte;
 
-  return me_Bits::GetBit(ByteValue, BitOffset);
+  TUint_1 BitValue;
+
+  if (!GetBit(&BitValue, ByteValue, BitOffset))
+    return 0;
+
+  return BitValue;
 }
 
 /*
@@ -373,7 +401,7 @@ TBool THeap::GetBit(
 */
 void THeap::SetBit(
   TUint_2 BitIndex,
-  TBool BitValue
+  TUint_1 BitValue
 )
 {
   TUint_2 ByteIndex = BitIndex / BitsInByte;
@@ -399,4 +427,5 @@ me_Heap::THeap Heap;
   2024-10-12
   2024-10-13 Two insertion points, optimizing gap for next iteration
   2024-10-25 Using [me_Bits]
+  2025-07-29
 */
