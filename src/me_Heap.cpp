@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-07-29
+  Last mod.: 2025-08-19
 */
 
 /*
@@ -410,7 +410,7 @@ void THeap::SetBit(
 
   TUint_1 BitOffset = BitIndex % BitsInByte;
 
-  me_Bits::SetBit(&ByteValue, BitOffset, BitValue);
+  me_Bits::SetBitTo(&ByteValue, BitOffset, BitValue);
 
   Bitmap.GetData().Bytes[ByteIndex] = ByteValue;
 }
