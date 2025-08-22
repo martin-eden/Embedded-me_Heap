@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-19
+  Last mod.: 2025-08-22
 */
 
 /*
@@ -10,14 +10,19 @@
   (N) bytes of memory. Runtime is constant O(N).
 */
 
+/*
+  This is experimental module. Implementation is infested
+  with debug output.
+*/
+
 #include "me_Heap.h"
 
 #include <me_BaseTypes.h>
 #include <me_MemorySegment.h>
 #include <me_ManagedMemory.h>
-#include <Arduino.h> // [Debug] for PSTR()
-#include <stdio.h> // [Debug] for printf_P()
 #include <me_Bits.h>
+
+#include <me_Console.h> // [Debug]
 
 using namespace me_Heap;
 
@@ -130,7 +135,7 @@ TBool THeap::Reserve(
   // No idea where to place it? Return
   if (!GetInsertIndex(&InsertIndex, Size))
   {
-    printf_P(PSTR("[Heap] Failed to reserve.\n"));
+    Console.PrintProgmem(AsProgmemSeg("[Heap] Failed to reserve."));
     return false;
   }
 
@@ -141,7 +146,7 @@ TBool THeap::Reserve(
   //* [Sanity] All bits for span in bitmap must be clear (span is free)
   if (!RangeIsSolid(*MemSeg, 0))
   {
-    printf_P(PSTR("[Heap] Span is not free.\n"));
+    Console.PrintProgmem(AsProgmemSeg("[Heap] Span is not free."));
     return false;
   }
   //*/
@@ -155,7 +160,12 @@ TBool THeap::Reserve(
   // Zero data (design requirement)
   me_MemorySegment::Freetown::ZeroMem(*MemSeg);
 
-  printf_P(PSTR("[Heap] Reserve ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
+  Console.WriteProgmem(AsProgmemSeg("[Heap] Reserve ( Addr"));
+  Console.Print(MemSeg->Addr);
+  Console.Write("Size");
+  Console.Print(MemSeg->Size);
+  Console.Write(")");
+  Console.EndLine();
 
   return true;
 }
@@ -176,7 +186,12 @@ TBool THeap::Release(
     return false;
   }
 
-  printf_P(PSTR("[Heap] Release ( Addr %05u Size %05u )\n"), MemSeg->Addr, MemSeg->Size);
+  Console.WriteProgmem(AsProgmemSeg("[Heap] Release ( Addr"));
+  Console.Print(MemSeg->Addr);
+  Console.Write("Size");
+  Console.Print(MemSeg->Size);
+  Console.Write(")");
+  Console.EndLine();
 
   LastSegSize = MemSeg->Size;
 
@@ -187,7 +202,7 @@ TBool THeap::Release(
   // Segment is not in our memory?
   if (!IsOurs(*MemSeg))
   {
-    printf_P(PSTR("[Heap] Not ours.\n"));
+    Console.PrintProgmem(AsProgmemSeg("[Heap] Not ours."));
     return false;
   }
 
@@ -200,7 +215,7 @@ TBool THeap::Release(
   //* [Sanity] All bits for span in bitmap must be set (span is used)
   if (!RangeIsSolid(*MemSeg, 1))
   {
-    printf_P(PSTR("[Heap] Span is not solid.\n"));
+    Console.PrintProgmem(AsProgmemSeg("[Heap] Span is not solid."));
     return false;
   }
   //*/
