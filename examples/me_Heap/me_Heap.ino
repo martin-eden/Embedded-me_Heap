@@ -41,27 +41,27 @@ void RunTest()
     run real code. Copy messages, convert them to bitmap. Observe.
   */
 
-  me_MemorySegment::TMemorySegment ms_1;
-  me_MemorySegment::TMemorySegment ms_2;
-  me_MemorySegment::TMemorySegment ms_3;
+  TAddressSegment Seg_1;
+  TAddressSegment Seg_2;
+  TAddressSegment Seg_3;
 
-  Heap.Reserve(&ms_1, 100);
-  Heap.Reserve(&ms_2, 10);
-  Heap.Reserve(&ms_3, 60);
+  Heap.Reserve(&Seg_1, 100);
+  Heap.Reserve(&Seg_2, 10);
+  Heap.Reserve(&Seg_3, 60);
 
-  Heap.Release(&ms_2);
+  Heap.Release(&Seg_2);
 
-  Heap.Reserve(&ms_2, 30);
+  Heap.Reserve(&Seg_2, 30);
 
-  Heap.Release(&ms_3);
+  Heap.Release(&Seg_3);
 
-  Heap.Release(&ms_2);
+  Heap.Release(&Seg_2);
 
-  Heap.Reserve(&ms_2, 60);
+  Heap.Reserve(&Seg_2, 60);
 
-  Heap.Release(&ms_1);
+  Heap.Release(&Seg_1);
 
-  Heap.Release(&ms_2);
+  Heap.Release(&Seg_2);
 }
 
 void setup()
@@ -80,8 +80,5 @@ void loop()
 }
 
 /*
-  2024-10-11
-  2024-10-12
-  2024-10-25
-  2025-08-22
+  2024 # # # #
 */

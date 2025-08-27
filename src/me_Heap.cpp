@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-22
+  Last mod.: 2025-08-27
 */
 
 /*
@@ -15,19 +15,18 @@
   with debug output.
 */
 
-#include "me_Heap.h"
+#include <me_Heap.h>
 
 #include <me_BaseTypes.h>
 #include <me_MemorySegment.h>
 #include <me_ManagedMemory.h>
 #include <me_Bits.h>
+#include <me_WorkMemory.h>
+#include <me_ProgramMemory.h>
 
 #include <me_Console.h> // [Debug]
 
 using namespace me_Heap;
-
-using
-  me_MemorySegment::TMemorySegment;
 
 // Another lame constant I should move somewhere
 const TUint_1 BitsInByte = 8;
@@ -122,7 +121,7 @@ TBool THeap::IsReady()
   Allocated block is always filled with zeroes.
 */
 TBool THeap::Reserve(
-  TMemorySegment * MemSeg,
+  TAddressSegment * MemSeg,
   TUint_2 Size
 )
 {
@@ -176,7 +175,7 @@ TBool THeap::Reserve(
   Released block may be filled with zeroes.
 */
 TBool THeap::Release(
-  TMemorySegment * MemSeg
+  TAddressSegment * MemSeg
 )
 {
   // Zero size? Job done!
@@ -285,6 +284,7 @@ TBool THeap::GetInsertIndex(
   if (BestIndex < Limit)
   {
     TBool AttachToRight = (SegSize < LastSegSize);
+
     if (AttachToRight)
       BestIndex = BestIndex + (BestSpanLen - SegSize);
 
@@ -319,7 +319,7 @@ TUint_2 THeap::GetNextBusyIndex(
   [Internal] Set bits to given value in range
 */
 void THeap::SetRange(
-  TMemorySegment MemSeg,
+  TAddressSegment MemSeg,
   TUint_1 BitsValue
 )
 {
@@ -334,7 +334,7 @@ void THeap::SetRange(
   [Internal] Set bitmap range bits
 */
 void THeap::MarkRange(
-  TMemorySegment MemSeg
+  TAddressSegment MemSeg
 )
 {
   SetRange(MemSeg, 1);
@@ -344,7 +344,7 @@ void THeap::MarkRange(
   [Internal] Clear bitmap range bits
 */
 void THeap::ClearRange(
-  TMemorySegment MemSeg
+  TAddressSegment MemSeg
 )
 {
   SetRange(MemSeg, 0);
@@ -356,11 +356,11 @@ void THeap::ClearRange(
   Empty segment is never ours.
 */
 TBool THeap::IsOurs(
-  me_MemorySegment::TMemorySegment MemSeg
+  TAddressSegment MemSeg
 )
 {
   return
-    me_MemorySegment::Freetown::IsInside(MemSeg, HeapMem.GetData());
+    me_MemorySegment::IsInside(MemSeg, HeapMem.GetData());
 }
 
 /*
@@ -369,7 +369,7 @@ TBool THeap::IsOurs(
   I.e. all bytes in range are marked as used/free in bitmap.
 */
 TBool THeap::RangeIsSolid(
-  TMemorySegment MemSeg,
+  TAddressSegment MemSeg,
   TUint_1 BitsValue
 )
 {
@@ -392,19 +392,22 @@ TUint_1 THeap::GetBit(
   TUint_2 BitIndex
 )
 {
-  using
-    me_Bits::GetBit;
+  /*
+    We'll use raw functions without range checks
+  */
 
-  TUint_2 ByteIndex = BitIndex / BitsInByte;
-
-  TUint_1 ByteValue = Bitmap.GetData().Bytes[ByteIndex];
-
-  TUint_1 BitOffset = BitIndex % BitsInByte;
-
+  TAddress ByteAddress;
+  TUnit ByteValue;
+  TUint_1 BitOffset;
   TUint_1 BitValue;
 
-  if (!GetBit(&BitValue, ByteValue, BitOffset))
-    return 0;
+  ByteAddress = Bitmap.GetData().Addr + (BitIndex / BitsInByte);
+
+  me_WorkMemory::Freetown::GetByteFrom(&ByteValue, ByteAddress);
+
+  BitOffset = BitIndex % BitsInByte;
+
+  me_Bits::Freetown::GetBit(&BitValue, ByteValue, BitOffset);
 
   return BitValue;
 }
@@ -419,15 +422,22 @@ void THeap::SetBit(
   TUint_1 BitValue
 )
 {
-  TUint_2 ByteIndex = BitIndex / BitsInByte;
+  TAddress ByteAddress;
+  TUnit ByteValue;
+  TUint_1 BitOffset;
 
-  TUint_1 ByteValue = Bitmap.GetData().Bytes[ByteIndex];
+  ByteAddress = Bitmap.GetData().Addr + (BitIndex / BitsInByte);
 
-  TUint_1 BitOffset = BitIndex % BitsInByte;
+  me_WorkMemory::Freetown::GetByteFrom(&ByteValue, ByteAddress);
 
-  me_Bits::SetBitTo(&ByteValue, BitOffset, BitValue);
+  BitOffset = BitIndex % BitsInByte;
 
-  Bitmap.GetData().Bytes[ByteIndex] = ByteValue;
+  if (BitValue == 1)
+    me_Bits::Freetown::SetBit(&ByteValue, BitOffset);
+  else
+    me_Bits::Freetown::ClearBit(&ByteValue, BitOffset);
+
+  me_WorkMemory::Freetown::SetByteAt(ByteAddress, ByteValue);
 }
 
 // ) THeap
@@ -443,4 +453,5 @@ me_Heap::THeap Heap;
   2024-10-13 Two insertion points, optimizing gap for next iteration
   2024-10-25 Using [me_Bits]
   2025-07-29
+  2025-08-27
 */
