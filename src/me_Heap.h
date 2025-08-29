@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-27
+  Last mod.: 2025-08-29
 */
 
 /*
@@ -12,7 +12,7 @@
 #pragma once
 
 #include <me_BaseTypes.h>
-#include <me_ManagedMemory.h>
+#include <me_WorkmemTools.h>
 
 namespace me_Heap
 {
@@ -40,8 +40,8 @@ namespace me_Heap
       TBool IsReady();
 
     protected:
-      me_ManagedMemory::TManagedMemory HeapMem;
-      me_ManagedMemory::TManagedMemory Bitmap;
+      me_WorkmemTools::TManagedMemory HeapMem;
+      me_WorkmemTools::TManagedMemory Bitmap;
       TUint_2 LastSegSize = 0;
 
       // Get index of empty span in bitmap where we will allocate
@@ -98,7 +98,7 @@ namespace me_Heap
 /*
   Global class instance
 
-  Used to switch [me_ManagedMemory] allocators to our allocator
+  Used to switch [TManagedMemory] allocators to our allocator
   when we are ready.
 
   We are ready when
@@ -107,7 +107,7 @@ namespace me_Heap
 
       That means that someone completed Heap.Init(<Size>) :
 
-        That means that [me_ManagedMemory] allocators reserved
+        That means that [TManagedMemory] allocators reserved
         memory for our data and bitmap via stock malloc().
 
   C developers love to hide globals under "__" prefix. Like

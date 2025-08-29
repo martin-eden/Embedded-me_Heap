@@ -2,14 +2,13 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-22
+  Last mod.: 2025-08-29
 */
 
 #include <me_Heap.h>
 
 #include <me_BaseTypes.h>
 #include <me_Console.h>
-#include <me_MemorySegment.h>
 
 void RunTest()
 {
@@ -68,11 +67,11 @@ void setup()
 {
   Console.Init();
 
-  Console.Print("[me_Heap] Start.");
+  Console.Print("( [me_Heap] test");
   Console.Indent();
   RunTest();
   Console.Unindent();
-  Console.Print("[me_Heap] Done.");
+  Console.Print(") Done");
 }
 
 void loop()

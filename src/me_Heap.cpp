@@ -19,7 +19,7 @@
 
 #include <me_BaseTypes.h>
 #include <me_MemorySegment.h>
-#include <me_ManagedMemory.h>
+#include <me_WorkmemTools.h>
 #include <me_Bits.h>
 #include <me_WorkMemory.h>
 #include <me_ProgramMemory.h>
@@ -40,10 +40,9 @@ THeap::~THeap()
 {
   /*
     If we're alive via global (then we shouldn't die but anyway)
-    destructors for our [me_ManagedMemory] data will check
-    "<OurGlobalName>.IsReady()".
+    clients should call "<OurGlobalName>.IsReady()".
 
-    If it returns "false" they will use stock free().
+    If it returns "false" they should use stock free().
   */
   IsReadyFlag = false;
 }
@@ -157,7 +156,7 @@ TBool THeap::Reserve(
   MemSeg->Addr = MemSeg->Addr + HeapMem.GetData().Addr;
 
   // Zero data (design requirement)
-  me_MemorySegment::Freetown::ZeroMem(*MemSeg);
+  me_WorkmemTools::ZeroMem(*MemSeg);
 
   Console.WriteProgmem(AsProgmemSeg("[Heap] Reserve ( Addr"));
   Console.Print(MemSeg->Addr);
@@ -206,7 +205,7 @@ TBool THeap::Release(
   }
 
   // Zero data for security (optional)
-  me_MemorySegment::Freetown::ZeroMem(*MemSeg);
+  me_WorkmemTools::ZeroMem(*MemSeg);
 
   // Now <MemSeg.Addr> is zero-based index
   MemSeg->Addr = MemSeg->Addr - HeapMem.GetData().Addr;
