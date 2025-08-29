@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-27
+  Last mod.: 2025-08-29
 */
 
 /*
@@ -402,7 +402,7 @@ TUint_1 THeap::GetBit(
 
   ByteAddress = Bitmap.GetData().Addr + (BitIndex / BitsInByte);
 
-  me_WorkMemory::Freetown::GetByteFrom(&ByteValue, ByteAddress);
+  ByteValue = me_WorkMemory::Freetown::GetByteFrom(ByteAddress);
 
   BitOffset = BitIndex % BitsInByte;
 
@@ -427,7 +427,7 @@ void THeap::SetBit(
 
   ByteAddress = Bitmap.GetData().Addr + (BitIndex / BitsInByte);
 
-  me_WorkMemory::Freetown::GetByteFrom(&ByteValue, ByteAddress);
+  ByteValue = me_WorkMemory::Freetown::GetByteFrom(ByteAddress);
 
   BitOffset = BitIndex % BitsInByte;
 
