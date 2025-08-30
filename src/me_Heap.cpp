@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-29
+  Last mod.: 2025-08-30
 */
 
 /*
@@ -18,11 +18,10 @@
 #include <me_Heap.h>
 
 #include <me_BaseTypes.h>
-#include <me_MemorySegment.h>
-#include <me_WorkmemTools.h>
 #include <me_Bits.h>
 #include <me_WorkMemory.h>
-#include <me_ProgramMemory.h>
+#include <me_AddrsegTools.h>
+#include <me_WorkmemTools.h>
 
 #include <me_Console.h> // [Debug]
 
@@ -359,7 +358,7 @@ TBool THeap::IsOurs(
 )
 {
   return
-    me_MemorySegment::IsInside(MemSeg, HeapMem.GetData());
+    me_AddrsegTools::IsInside(MemSeg, HeapMem.GetData());
 }
 
 /*

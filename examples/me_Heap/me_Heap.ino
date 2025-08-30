@@ -2,7 +2,7 @@
 
 /*
   Author: Martin Eden
-  Last mod.: 2025-08-29
+  Last mod.: 2025-08-30
 */
 
 #include <me_Heap.h>
@@ -30,14 +30,11 @@ void RunTest()
 
   /*
     This test is not doing much at this time. Just allocates/frees
-    memory blocks to make holes. Hope is that debug printf() are
-    enabled in [me_MemorySegment].
+    memory blocks to make holes.
 
-    ([me_Console] output won't work for memory allocation debug prints
-    because console printing of integers allocates memory.)
-
-    Real test is enable debug printing in [me_MemorySegment] and
-    run real code. Copy messages, convert them to bitmap. Observe.
+    Real test is add debug printing in memory allocation functions
+    in [me_WorkmemTools] and run real code. Copy messages, convert
+    them to bitmap. Observe.
   */
 
   TAddressSegment Seg_1;
